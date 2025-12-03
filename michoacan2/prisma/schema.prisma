@@ -1,0 +1,467 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model artist {
+  artist_id     Int     @id @default(autoincrement())
+  name          String  @db.VarChar(120)
+  genre         String? @db.VarChar(60)
+  contact_email String? @db.VarChar(320)
+  bio           String? @db.Text
+  photo_url     String? @db.Text
+}
+
+model artists {
+  artist_id     Int             @id @default(autoincrement())
+  name          String          @db.VarChar(200)
+  genre         String?         @db.VarChar(100)
+  contact_email String?         @db.VarChar(100)
+  bio           String?         @db.Text
+  photo_url     String?         @db.VarChar(500)
+
+  event_artists event_artists[]
+}
+
+model audit_log {
+  log_id     Int       @id @default(autoincrement())
+  user_id    Int?
+  action     String    @db.VarChar(80)
+  entity     String    @db.VarChar(80)
+  entity_id  String?
+  meta_json  Json?
+  created_at DateTime? @default(now()) @db.DateTime(0)
+
+  @@index([user_id], map: "idx_audit_user")
+}
+
+model event {
+  event_id    Int      @id @default(autoincrement())
+  name        String   @db.VarChar(160)
+  description String?  @db.Text
+  start_dt    DateTime @db.DateTime(0)
+  end_dt      DateTime @db.DateTime(0)
+  venue_id    Int?
+  status      String?  @default("draft") @db.VarChar(20)
+  cover_url   String?  @db.Text
+  seated      Boolean? @default(false)
+
+  @@index([venue_id], map: "idx_event_venue")
+}
+
+model event_artist {
+  event_id  Int
+  artist_id Int
+
+  @@id([event_id, artist_id])
+  @@index([artist_id], map: "idx_ea_artist")
+}
+
+model event_artists {
+  event_artist_id Int      @id @default(autoincrement())
+  event_id        Int
+  artist_id       Int
+
+  events          events   @relation(fields: [event_id], references: [event_id])
+  artists         artists  @relation(fields: [artist_id], references: [artist_id])
+
+  @@unique([event_id, artist_id], map: "unique_event_artist")
+  @@index([artist_id], map: "artist_id")
+}
+
+model event_organizer {
+  event_id   Int
+  user_id    Int
+  role_label String? @db.VarChar(80)
+
+  @@id([event_id, user_id])
+  @@index([user_id], map: "fk_evorg_user")
+}
+
+model event_sponsor {
+  event_id          Int
+  sponsor_id        Int
+  contribution_type String?  @db.VarChar(40)
+  amount            Decimal? @db.Decimal(12, 2)
+  notes             String?  @db.Text
+
+  @@id([event_id, sponsor_id])
+  @@index([sponsor_id], map: "idx_es_sponsor")
+}
+
+model events {
+  event_id      Int              @id @default(autoincrement())
+  name          String           @db.VarChar(200)
+  description   String?          @db.Text
+  start_dt      DateTime         @db.DateTime(0)
+  end_dt        DateTime         @db.DateTime(0)
+  venue_id      Int?
+  status        events_status?   @default(draft)
+  cover_url     String?          @db.VarChar(500)
+  seated        Boolean?         @default(false)
+  created_at    DateTime?        @default(now()) @db.DateTime(0)
+
+  venues        venues?          @relation(fields: [venue_id], references: [venue_id])
+  ticket_types  ticket_types[]
+  event_artists event_artists[]
+
+  @@index([venue_id], map: "venue_id")
+}
+
+model inventory_item {
+  item_id   Int     @id @default(autoincrement())
+  event_id  Int
+  name      String  @db.VarChar(120)
+  sku       String? @db.VarChar(60)
+  uom       String? @db.VarChar(20)
+  min_stock Int?    @default(0)
+
+  @@index([event_id], map: "idx_item_event")
+}
+
+model inventory_movement {
+  move_id    Int                          @id @default(autoincrement())
+  item_id    Int
+  move_type  inventory_movement_move_type
+  qty        Decimal                      @db.Decimal(10, 2)
+  reason     String?                      @db.Text
+  created_by Int?
+  created_at DateTime?                    @default(now()) @db.DateTime(0)
+
+  @@index([item_id], map: "idx_move_item")
+  @@index([created_by], map: "idx_move_user")
+}
+
+model notification {
+  notification_id Int       @id @default(autoincrement())
+  user_id         Int
+  event_id        Int?
+  type            String    @db.VarChar(40)
+  payload_json    Json?
+  status          String?   @default("pending") @db.VarChar(20)
+  created_at      DateTime? @default(now()) @db.DateTime(0)
+  delivered_at    DateTime? @db.DateTime(0)
+
+  @@index([event_id], map: "fk_notif_event")
+  @@index([user_id, status, created_at], map: "idx_notif_user_status")
+}
+
+model order {
+  order_id       Int       @id @default(autoincrement())
+  user_id        Int?
+  total_amount   Decimal   @db.Decimal(12, 2)
+  currency       String?   @default("MXN") @db.Char(3)
+  payment_status String?   @default("pending") @db.VarChar(20)
+  created_at     DateTime? @default(now()) @db.DateTime(0)
+
+  @@index([user_id], map: "idx_order_user")
+}
+
+model payment {
+  payment_id      Int       @id @default(autoincrement())
+  order_id        Int
+  provider        String?   @db.VarChar(40)
+  provider_txn_id String?   @unique(map: "uk_payment_txn") @db.VarChar(80)
+  amount          Decimal   @db.Decimal(12, 2)
+  currency        String?   @default("MXN") @db.Char(3)
+  method          String?   @db.VarChar(20)
+  status          String?   @default("pending") @db.VarChar(20)
+  paid_at         DateTime? @db.DateTime(0)
+
+  @@index([order_id], map: "idx_payment_order")
+}
+
+model playlist {
+  playlist_id Int      @id @default(autoincrement())
+  event_id    Int
+  name        String?  @db.VarChar(120)
+  is_public   Boolean? @default(true)
+
+  @@index([event_id], map: "idx_playlist_event")
+}
+
+model playlist_track {
+  playlist_id Int
+  track_id    Int
+  position    Int?
+
+  @@id([playlist_id, track_id])
+  @@index([track_id], map: "idx_pt_track")
+}
+
+model purchase_items {
+  purchase_item_id Int     @id @default(autoincrement())
+  purchase_id      Int
+  ticket_type_id   Int
+  quantity         Int
+  unit_price       Decimal @db.Decimal(10, 2)
+  currency         String? @default("MXN") @db.VarChar(3)
+  subtotal         Decimal @db.Decimal(10, 2)
+
+  @@index([purchase_id], map: "purchase_id")
+  @@index([ticket_type_id], map: "ticket_type_id")
+}
+
+model purchases {
+  purchase_id Int               @id @default(autoincrement())
+  user_id     Int
+  event_id    Int
+  purchase_dt DateTime?         @default(now()) @db.DateTime(0)
+  status      purchases_status? @default(pending)
+
+  @@index([event_id], map: "event_id")
+  @@index([user_id], map: "user_id")
+}
+
+model role {
+  role_id Int    @id @default(autoincrement())
+  name    String @unique(map: "uk_role_name") @db.VarChar(40)
+}
+
+model roles {
+  role_id     Int     @id @default(autoincrement())
+  role_name   String  @unique(map: "role_name") @db.VarChar(50)
+  description String? @db.Text
+
+  user_roles  user_roles[]
+}
+
+model schedule {
+  schedule_id Int      @id @default(autoincrement())
+  event_id    Int
+  stage_id    Int
+  artist_id   Int
+  start_dt    DateTime @db.DateTime(0)
+  end_dt      DateTime @db.DateTime(0)
+
+  @@index([artist_id, start_dt, end_dt], map: "idx_sched_artist_time")
+  @@index([event_id], map: "idx_sched_event")
+  @@index([stage_id, start_dt, end_dt], map: "idx_sched_stage_time")
+}
+
+model seat {
+  seat_id  Int     @id @default(autoincrement())
+  event_id Int
+  section  String? @db.VarChar(40)
+  row      String? @db.VarChar(20)
+  number   String? @db.VarChar(20)
+  status   String? @default("available") @db.VarChar(20)
+
+  @@unique([event_id, section, row, number], map: "uk_seat_unique")
+  @@index([event_id], map: "idx_seat_event")
+}
+
+model seat_assignment {
+  seat_id   Int  @id
+  ticket_id Int? @unique(map: "ticket_id")
+}
+
+model security_zone {
+  zone_id  Int     @id @default(autoincrement())
+  event_id Int
+  name     String  @db.VarChar(120)
+  geo_ref  String? @db.Text
+
+  @@index([event_id], map: "idx_zone_event")
+}
+
+model sponsor {
+  sponsor_id   Int     @id @default(autoincrement())
+  name         String  @db.VarChar(140)
+  type         String? @db.VarChar(60)
+  contact      String? @db.Text
+  contract_url String? @db.Text
+}
+
+model staff_assignment {
+  assignment_id Int       @id @default(autoincrement())
+  user_id       Int?
+  event_id      Int?
+  zone_id       Int?
+  role_label    String?   @db.VarChar(80)
+  shift_start   DateTime? @db.DateTime(0)
+  shift_end     DateTime? @db.DateTime(0)
+  notes         String?   @db.Text
+
+  @@index([event_id], map: "idx_staff_event")
+  @@index([user_id], map: "idx_staff_user")
+  @@index([zone_id], map: "idx_staff_zone")
+}
+
+model stage {
+  stage_id Int    @id @default(autoincrement())
+  venue_id Int
+  name     String @db.VarChar(120)
+  capacity Int?
+
+  @@index([venue_id], map: "idx_stage_venue")
+}
+
+model ticket {
+  ticket_id      Int       @id @default(autoincrement())
+  order_id       Int?
+  ticket_type_id Int
+  attendee_name  String?   @db.VarChar(140)
+  qr_code        String    @unique(map: "uk_ticket_qr") @db.VarChar(64)
+  status         String?   @default("valid") @db.VarChar(20)
+  issued_at      DateTime? @default(now()) @db.DateTime(0)
+
+  @@index([order_id], map: "idx_ticket_order")
+  @@index([ticket_type_id], map: "idx_ticket_type")
+}
+
+model ticket_reservation {
+  reservation_id Int       @id @default(autoincrement())
+  event_id       Int
+  ticket_type_id Int
+  user_id        Int?
+  qty            Int
+  status         String?   @default("active") @db.VarChar(20)
+  created_at     DateTime? @default(now()) @db.DateTime(0)
+  expires_at     DateTime  @db.DateTime(0)
+
+  @@index([event_id], map: "fk_tr_event")
+  @@index([user_id], map: "fk_tr_user")
+  @@index([ticket_type_id, status, expires_at], map: "idx_tr_active")
+}
+
+model ticket_type {
+  ticket_type_id Int      @id @default(autoincrement())
+  event_id       Int
+  name           String   @db.VarChar(80)
+  category       String?  @db.VarChar(30)
+  price          Decimal  @db.Decimal(10, 2)
+  currency       String?  @default("MXN") @db.Char(3)
+  quota          Int
+  max_per_user   Int?     @default(0)
+  perks_json     Json?
+  is_active      Boolean? @default(true)
+
+  @@index([event_id], map: "idx_ttype_event")
+}
+
+model ticket_types {
+  ticket_type_id Int      @id @default(autoincrement())
+  event_id       Int
+  name           String   @db.VarChar(100)
+  category       String?  @db.VarChar(50)
+  price          Decimal  @db.Decimal(10, 2)
+  currency       String?  @default("MXN") @db.VarChar(3)
+  quota          Int
+  max_per_user   Int?     @default(10)
+  perks_json     Json?
+  is_active      Boolean? @default(true)
+
+  events         events   @relation(fields: [event_id], references: [event_id])
+
+  @@index([event_id], map: "event_id")
+}
+
+model track {
+  track_id   Int      @id @default(autoincrement())
+  artist_id  Int
+  title      String   @db.VarChar(160)
+  audio_url  String   @db.Text
+  duration_s Int?
+  is_public  Boolean? @default(true)
+
+  @@index([artist_id], map: "idx_track_artist")
+}
+
+model user {
+  user_id         Int       @id @default(autoincrement())
+  name            String    @db.VarChar(120)
+  email           String    @unique(map: "uk_user_email") @db.VarChar(320)
+  password_hash   String    @db.Text
+  status          String?   @default("active") @db.VarChar(20)
+  mfa_enabled     Boolean?  @default(false)
+  mfa_secret      String?   @db.Text
+  last_login_at   DateTime? @db.DateTime(0)
+  failed_attempts Int?      @default(0)
+  created_at      DateTime? @default(now()) @db.DateTime(0)
+}
+
+model user_role {
+  user_id Int
+  role_id Int
+
+  @@id([user_id, role_id])
+  @@index([role_id], map: "fk_user_role_role")
+}
+
+model user_roles {
+  user_role_id Int @id @default(autoincrement())
+  user_id      Int
+  role_id      Int
+
+  users        users @relation(fields: [user_id], references: [user_id])
+  roles        roles @relation(fields: [role_id], references: [role_id])
+
+  @@unique([user_id, role_id], map: "unique_user_role")
+  @@index([role_id], map: "role_id")
+  @@index([user_id], map: "user_id")
+}
+
+model users {
+  user_id         Int           @id @default(autoincrement())
+  name            String        @db.VarChar(100)
+  email           String        @unique(map: "email") @db.VarChar(100)
+  password_hash   String        @db.VarChar(255)
+  status          users_status? @default(active)
+  mfa_enabled     Boolean?      @default(false)
+  mfa_secret      String?       @db.VarChar(100)
+  last_login_at   DateTime?     @db.DateTime(0)
+  failed_attempts Int?          @default(0)
+  created_at      DateTime?     @default(now()) @db.DateTime(0)
+
+  user_roles      user_roles[]
+}
+
+model venue {
+  venue_id Int     @id @default(autoincrement())
+  name     String  @db.VarChar(120)
+  address  String? @db.Text
+  city     String? @db.VarChar(80)
+  state    String? @db.VarChar(80)
+  capacity Int?
+}
+
+model venues {
+  venue_id Int      @id @default(autoincrement())
+  name     String   @db.VarChar(200)
+  address  String?  @db.VarChar(255)
+  city     String?  @db.VarChar(100)
+  state    String?  @db.VarChar(100)
+  capacity Int?
+
+  events   events[]
+}
+
+enum inventory_movement_move_type {
+  IN
+  OUT
+}
+
+enum purchases_status {
+  pending
+  confirmed
+  cancelled
+  refunded
+}
+
+enum users_status {
+  active
+  inactive
+  suspended
+}
+
+enum events_status {
+  draft
+  active
+  inactive
+  cancelled
+}

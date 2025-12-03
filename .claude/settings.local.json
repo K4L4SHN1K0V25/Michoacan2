@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build:*)",
+      "Bash(find:*)",
+      "Bash(npm run dev:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs kill -9)",
+      "Bash(taskkill /F /PID 17840)",
+      "Bash(taskkill //F //PID 17840)",
+      "Bash(npm install:*)",
+      "Bash(npx prisma db pull:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(del prismaprisma.config.ts)",
+      "Bash(npx prisma generate:*)",
+      "Bash(node scripts/seed-database.js:*)",
+      "Bash(node scripts/reset-and-seed.js:*)",
+      "Bash(curl:*)",
+      "Bash(node -e:*)",
+      "Bash(timeout /t 3)",
+      "Bash(ping:*)",
+      "Bash(taskkill:*)",
+      "Bash(timeout /t 5)",
+      "Bash(npx prisma studio)",
+      "Bash(del srcappadminuserspage.tsx)",
+      "Bash(ren:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
