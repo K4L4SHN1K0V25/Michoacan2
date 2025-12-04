@@ -279,12 +279,6 @@ export default function AdminEventsPage() {
                     {e.totalTickets - e.availableTickets} / {e.totalTickets}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <Link
-                      href={`/events/${e.id}`}
-                      className="text-blue-600 hover:text-blue-900 mr-3"
-                    >
-                      Ver
-                    </Link>
                     {e.status === 'active' && (
                       <>
                         <button

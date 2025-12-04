@@ -10,7 +10,6 @@ export default function AdminProfile() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: '',
     role: '',
   });
 
@@ -19,7 +18,6 @@ export default function AdminProfile() {
       setFormData({
         name: user.name || 'Admin TicketFlow',
         email: user.email || 'admin@ticketflow.com',
-        phone: user.phone || '+52 443 100 0000',
         role: user.role === 'admin' ? 'Administrador Principal' : user.role || 'Administrador',
       });
     }
@@ -36,7 +34,6 @@ export default function AdminProfile() {
           userId: user?.id,
           name: formData.name,
           email: formData.email,
-          phone: formData.phone,
         }),
       });
 
@@ -119,24 +116,6 @@ export default function AdminProfile() {
                   ) : (
                     <p className="text-lg text-slate-900 px-4 py-3 bg-slate-50 rounded-lg">
                       {formData.email}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">
-                    Teléfono
-                  </label>
-                  {isEditing ? (
-                    <input
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  ) : (
-                    <p className="text-lg text-slate-900 px-4 py-3 bg-slate-50 rounded-lg">
-                      {formData.phone}
                     </p>
                   )}
                 </div>

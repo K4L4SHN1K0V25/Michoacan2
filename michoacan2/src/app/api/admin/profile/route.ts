@@ -28,7 +28,7 @@ export async function PUT(req: NextRequest) {
 
       if (existingUser) {
         return NextResponse.json(
-          { error: 'El email ya está en uso por otro usuario' },
+          { error: 'El email ya est  en uso por otro usuario' },
           { status: 409 }
         );
       }
