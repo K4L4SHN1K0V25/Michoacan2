@@ -22,8 +22,8 @@ export default function Navbar({ userRole: propUserRole, isLoggedIn: propIsLogge
     if (!isLoggedIn) {
       return [
         { href: '/customer', label: 'Events' },
-        { href: '/customer/about', label: 'About' },
-        { href: '/customer/contact', label: 'Contact' },
+        { href: '/about', label: 'About' },
+        { href: '/contact', label: 'Contact' },
       ];
     }
 
@@ -47,6 +47,8 @@ export default function Navbar({ userRole: propUserRole, isLoggedIn: propIsLogge
           { href: '/customer', label: 'Events' },
           { href: '/customer/my-tickets', label: 'My Tickets' },
           { href: '/customer/profile', label: 'Profile' },
+          { href: '/contact', label: 'Contact' },
+          { href: '/about', label: 'About' },
         ];
       default:
         return [];
