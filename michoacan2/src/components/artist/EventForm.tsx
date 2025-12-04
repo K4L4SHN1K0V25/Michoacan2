@@ -209,15 +209,20 @@ export default function EventForm({ initialData, onSubmit, isSubmitting }: Event
                 />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input
-                    label="Price"
-                    type="number"
-                    step="0.01"
-                    placeholder="75.00"
-                    value={ticket.price || ''}
-                    onChange={(e) => updateTicketType(index, 'price', parseFloat(e.target.value) || 0)}
-                    required
-                  />
+                  <div>
+                    <label className="block text-sm font-bold text-slate-900 mb-2">
+                      Price <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      placeholder="75.00"
+                      value={ticket.price || ''}
+                      onChange={(e) => updateTicketType(index, 'price', parseFloat(e.target.value) || 0)}
+                      required
+                      className="w-full px-4 py-2 border-2 border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
                   <Input
                     label="Quantity"
                     type="number"
@@ -235,17 +240,21 @@ export default function EventForm({ initialData, onSubmit, isSubmitting }: Event
 
       {/* Submit Buttons */}
       <div className="flex justify-end space-x-4">
-        <Button
+        <button
           type="button"
-          variant="secondary"
           onClick={(e: any) => handleSubmit(e, true)}
           disabled={isSubmitting}
+          className="px-6 py-3 bg-slate-200 text-slate-700 font-semibold rounded-lg hover:bg-slate-300 transition-colors disabled:opacity-50"
         >
           Save as Draft
-        </Button>
-        <Button type="submit" variant="primary" disabled={isSubmitting}>
+        </button>
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+        >
           {isSubmitting ? 'Creating...' : 'Publish Event'}
-        </Button>
+        </button>
       </div>
     </form>
   );

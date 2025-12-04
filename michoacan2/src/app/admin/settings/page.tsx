@@ -1,56 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useAuth } from '@/components/providers/AuthProvider';
+import { useState } from 'react';
+import AdminLayout from '@/components/admin/AdminLayout';
 
 export default function AdminSettings() {
-  const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState<'general' | 'platform' | 'security'>('general');
 
-  useEffect(() => {
-    if (!authLoading && (!user || user.role !== 'admin')) {
-      router.push('/');
-    }
-  }, [user, authLoading, router]);
-
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user || user.role !== 'admin') {
-    return null;
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-black text-slate-900">Configuración del Sistema</h1>
-              <p className="text-slate-600 mt-1">Administra los ajustes de la plataforma</p>
-            </div>
-            <Link
-              href="/admin"
-              className="px-4 py-2 text-sm font-semibold text-slate-700 hover:text-slate-900 transition-colors"
-            >
-              ← Volver al panel
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <AdminLayout>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Tabs */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
@@ -396,7 +354,7 @@ export default function AdminSettings() {
             </div>
           </div>
         )}
-      </main>
-    </div>
+      </div>
+    </AdminLayout>
   );
 }

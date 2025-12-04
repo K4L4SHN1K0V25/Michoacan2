@@ -2,7 +2,7 @@
 
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
-import Button from '@/components/shared/Button';
+import Link from 'next/link';
 
 export default function MyTickets() {
   const tickets = [
@@ -155,13 +155,9 @@ export default function MyTickets() {
                       <p className="text-white text-sm font-semibold mb-4 text-center">
                         Escanea este código en el evento
                       </p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="bg-white text-blue-600 hover:bg-blue-50 border-white"
-                      >
+                      <button className="px-4 py-2 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 border-2 border-white transition-colors">
                         Descargar PDF
-                      </Button>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -192,7 +188,9 @@ export default function MyTickets() {
                 <p className="text-slate-600 mb-6">
                   Explora eventos disponibles y consigue tus boletos
                 </p>
-                <Button href="/customer">Explorar Eventos</Button>
+                <Link href="/customer" className="px-8 py-4 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors inline-block">
+                  Explorar Eventos
+                </Link>
               </div>
             )}
           </div>

@@ -1,66 +1,98 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useAuth } from '@/components/providers/AuthProvider';
+import AdminLayout from '@/components/admin/AdminLayout';
+
+interface PlatformStats {
+  totalRevenue: number;
+  totalTickets: number;
+  totalUsers: number;
+  totalEvents: number;
+  activeEvents: number;
+}
+
+interface MonthlySale {
+  month: string;
+  revenue: number;
+  tickets: number;
+}
+
+interface Artist {
+  name: string;
+  revenue: number;
+}
+
+interface PaymentMethod {
+  method: string;
+  amount: number;
+  count: number;
+}
+
+interface UserRole {
+  role: string;
+  count: number;
+}
+
+interface EventStat {
+  status: string;
+  count: number;
+}
 
 export default function AdminReports() {
-  const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
   const [reportType, setReportType] = useState<'sales' | 'users' | 'events'>('sales');
+  const [loading, setLoading] = useState(true);
+  const [platformStats, setPlatformStats] = useState<PlatformStats>({
+    totalRevenue: 0,
+    totalTickets: 0,
+    totalUsers: 0,
+    totalEvents: 0,
+    activeEvents: 0,
+  });
+  const [monthlySales, setMonthlySales] = useState<MonthlySale[]>([]);
+  const [topArtists, setTopArtists] = useState<Artist[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [usersByRole, setUsersByRole] = useState<UserRole[]>([]);
+  const [eventStats, setEventStats] = useState<EventStat[]>([]);
 
   useEffect(() => {
-    if (!authLoading && (!user || user.role !== 'admin')) {
-      router.push('/');
-    }
-  }, [user, authLoading, router]);
+    fetchStats();
+  }, []);
 
-  if (authLoading) {
+  const fetchStats = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/admin/stats');
+      const data = await response.json();
+
+      setPlatformStats(data.platformStats);
+      setMonthlySales(data.monthlySales);
+      setTopArtists(data.topArtists);
+      setPaymentMethods(data.paymentMethods);
+      setUsersByRole(data.usersByRole);
+      setEventStats(data.eventStats);
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando...</p>
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Cargando estadísticas...</p>
+          </div>
         </div>
-      </div>
+      </AdminLayout>
     );
   }
 
-  if (!user || user.role !== 'admin') {
-    return null;
-  }
-
-  const platformStats = {
-    totalRevenue: 125000,
-    totalTickets: 1450,
-    totalUsers: 890,
-    totalEvents: 45,
-    activeEvents: 12,
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-black text-slate-900">Reportes</h1>
-              <p className="text-slate-600 mt-1">Análisis completo de la plataforma</p>
-            </div>
-            <Link
-              href="/admin"
-              className="px-4 py-2 text-sm font-semibold text-slate-700 hover:text-slate-900 transition-colors"
-            >
-              ← Volver al panel
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-
+    <AdminLayout>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Stats Grid */}
         <div className="grid md:grid-cols-5 gap-6 mb-12">
           <div className="bg-white rounded-2xl shadow-lg p-6 text-center hover:shadow-xl transition-shadow">
@@ -158,14 +190,12 @@ export default function AdminReports() {
             <div className="bg-white rounded-2xl shadow-xl p-8">
               <div className="flex justify-between items-center mb-8">
                 <h2 className="text-3xl font-black text-slate-900">Ventas por Mes</h2>
-                <Button variant="outline">Exportar PDF</Button>
+                <button className="px-4 py-2 border-2 border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-100 transition-colors">
+                  Exportar PDF
+                </button>
               </div>
               <div className="space-y-4">
-                {[
-                  { month: 'Enero 2025', revenue: 45000, tickets: 380, growth: 15 },
-                  { month: 'Diciembre 2024', revenue: 39000, tickets: 320, growth: 8 },
-                  { month: 'Noviembre 2024', revenue: 36000, tickets: 295, growth: 12 },
-                ].map((data, index) => (
+                {monthlySales.map((data, index) => (
                   <div key={index} className="border-b-2 border-slate-100 pb-4 last:border-0">
                     <div className="flex justify-between items-center mb-2">
                       <span className="font-bold text-slate-900 text-lg">{data.month}</span>
@@ -173,15 +203,12 @@ export default function AdminReports() {
                         <span className="font-black text-slate-900 text-2xl">
                           ${data.revenue.toLocaleString('es-MX')}
                         </span>
-                        <span className="text-green-600 font-semibold text-sm ml-3">
-                          +{data.growth}%
-                        </span>
                       </div>
                     </div>
                     <div className="w-full bg-slate-200 rounded-full h-4 overflow-hidden mb-2">
                       <div
                         className="bg-gradient-to-r from-blue-600 to-indigo-600 h-4 rounded-full"
-                        style={{ width: `${(data.revenue / 50000) * 100}%` }}
+                        style={{ width: `${Math.min((data.revenue / (platformStats.totalRevenue || 1)) * 100, 100)}%` }}
                       />
                     </div>
                     <p className="text-sm text-slate-600">{data.tickets} tickets vendidos</p>
@@ -194,51 +221,62 @@ export default function AdminReports() {
               <div className="bg-white rounded-2xl shadow-xl p-8">
                 <h3 className="text-2xl font-black text-slate-900 mb-6">Top Artistas</h3>
                 <div className="space-y-4">
-                  {[
-                    { name: 'Artista Demo', revenue: 45000, percentage: 36 },
-                    { name: 'Banda XYZ', revenue: 38000, percentage: 30 },
-                    { name: 'DJ Fusion', revenue: 28000, percentage: 22 },
-                  ].map((artist, index) => (
-                    <div key={index} className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-black">
-                        {index + 1}
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-bold text-slate-900">{artist.name}</p>
-                        <p className="text-sm text-slate-600">
-                          ${artist.revenue.toLocaleString('es-MX')}
-                        </p>
-                      </div>
-                      <span className="text-blue-600 font-bold">{artist.percentage}%</span>
-                    </div>
-                  ))}
+                  {topArtists.length > 0 ? (
+                    topArtists.map((artist, index) => {
+                      const percentage = platformStats.totalRevenue > 0
+                        ? Math.round((artist.revenue / platformStats.totalRevenue) * 100)
+                        : 0;
+                      return (
+                        <div key={index} className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-black">
+                            {index + 1}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-bold text-slate-900">{artist.name}</p>
+                            <p className="text-sm text-slate-600">
+                              ${artist.revenue.toLocaleString('es-MX')}
+                            </p>
+                          </div>
+                          <span className="text-blue-600 font-bold">{percentage}%</span>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <p className="text-center text-slate-600">No hay datos disponibles</p>
+                  )}
                 </div>
               </div>
 
               <div className="bg-white rounded-2xl shadow-xl p-8">
                 <h3 className="text-2xl font-black text-slate-900 mb-6">Métodos de Pago</h3>
                 <div className="space-y-4">
-                  {[
-                    { method: 'Tarjeta de Crédito', percentage: 55, amount: 68750 },
-                    { method: 'Tarjeta de Débito', percentage: 30, amount: 37500 },
-                    { method: 'PayPal', percentage: 15, amount: 18750 },
-                  ].map((payment, index) => (
-                    <div key={index}>
-                      <div className="flex justify-between mb-2">
-                        <span className="font-bold text-slate-900">{payment.method}</span>
-                        <span className="text-slate-600">
-                          ${payment.amount.toLocaleString('es-MX')}
-                        </span>
-                      </div>
-                      <div className="w-full bg-slate-200 rounded-full h-3">
-                        <div
-                          className="bg-gradient-to-r from-blue-600 to-indigo-600 h-3 rounded-full"
-                          style={{ width: `${payment.percentage}%` }}
-                        />
-                      </div>
-                      <p className="text-sm text-slate-500 mt-1">{payment.percentage}%</p>
-                    </div>
-                  ))}
+                  {paymentMethods.length > 0 ? (
+                    paymentMethods.map((payment, index) => {
+                      const totalPayments = paymentMethods.reduce((sum, p) => sum + p.amount, 0);
+                      const percentage = totalPayments > 0
+                        ? Math.round((payment.amount / totalPayments) * 100)
+                        : 0;
+                      return (
+                        <div key={index}>
+                          <div className="flex justify-between mb-2">
+                            <span className="font-bold text-slate-900">{payment.method}</span>
+                            <span className="text-slate-600">
+                              ${payment.amount.toLocaleString('es-MX')}
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-200 rounded-full h-3">
+                            <div
+                              className="bg-gradient-to-r from-blue-600 to-indigo-600 h-3 rounded-full"
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
+                          <p className="text-sm text-slate-500 mt-1">{percentage}%</p>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <p className="text-center text-slate-600">No hay datos disponibles</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -249,25 +287,26 @@ export default function AdminReports() {
         {reportType === 'users' && (
           <div className="bg-white rounded-2xl shadow-xl p-8">
             <div className="flex justify-between items-center mb-8">
-              <h2 className="text-3xl font-black text-slate-900">Crecimiento de Usuarios</h2>
-              <Button variant="outline">Exportar CSV</Button>
+              <h2 className="text-3xl font-black text-slate-900">Distribución de Usuarios</h2>
+              <button className="px-4 py-2 border-2 border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-100 transition-colors">
+                Exportar CSV
+              </button>
             </div>
             <div className="grid md:grid-cols-3 gap-6 mb-8">
-              <div className="text-center p-6 bg-blue-50 rounded-xl">
-                <p className="text-sm text-slate-600 mb-2 font-semibold">Clientes</p>
-                <p className="text-4xl font-black text-blue-600">650</p>
-                <p className="text-sm text-green-600 font-semibold mt-2">+18% este mes</p>
-              </div>
-              <div className="text-center p-6 bg-indigo-50 rounded-xl">
-                <p className="text-sm text-slate-600 mb-2 font-semibold">Artistas</p>
-                <p className="text-4xl font-black text-indigo-600">230</p>
-                <p className="text-sm text-green-600 font-semibold mt-2">+12% este mes</p>
-              </div>
-              <div className="text-center p-6 bg-purple-50 rounded-xl">
-                <p className="text-sm text-slate-600 mb-2 font-semibold">Admins</p>
-                <p className="text-4xl font-black text-purple-600">10</p>
-                <p className="text-sm text-slate-600 font-semibold mt-2">Sin cambios</p>
-              </div>
+              {usersByRole.map((roleData, index) => {
+                const colors = [
+                  { bg: 'bg-blue-50', text: 'text-blue-600' },
+                  { bg: 'bg-indigo-50', text: 'text-indigo-600' },
+                  { bg: 'bg-purple-50', text: 'text-purple-600' },
+                ];
+                const color = colors[index % colors.length];
+                return (
+                  <div key={index} className={`text-center p-6 ${color.bg} rounded-xl`}>
+                    <p className="text-sm text-slate-600 mb-2 font-semibold capitalize">{roleData.role}</p>
+                    <p className={`text-4xl font-black ${color.text}`}>{roleData.count}</p>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -277,27 +316,37 @@ export default function AdminReports() {
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-3xl font-black text-slate-900">Estadísticas de Eventos</h2>
-            <Button variant="outline">Exportar Excel</Button>
+            <button className="px-4 py-2 border-2 border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-100 transition-colors">
+              Exportar Excel
+            </button>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
-            <div className="text-center p-6 bg-green-50 rounded-xl">
-              <p className="text-sm text-slate-600 mb-2 font-semibold">Eventos Completados</p>
-              <p className="text-4xl font-black text-green-600">28</p>
-            </div>
-            <div className="text-center p-6 bg-blue-50 rounded-xl">
-              <p className="text-sm text-slate-600 mb-2 font-semibold">Eventos Activos</p>
-              <p className="text-4xl font-black text-blue-600">12</p>
-            </div>
-            <div className="text-center p-6 bg-orange-50 rounded-xl">
-              <p className="text-sm text-slate-600 mb-2 font-semibold">Próximos Eventos</p>
-              <p className="text-4xl font-black text-orange-600">5</p>
-            </div>
+            {eventStats.map((stat, index) => {
+              const statusLabels: Record<string, string> = {
+                'active': 'Eventos Activos',
+                'draft': 'Borradores',
+                'inactive': 'Inactivos',
+                'cancelled': 'Cancelados',
+              };
+              const statusColors: Record<string, { bg: string; text: string }> = {
+                'active': { bg: 'bg-blue-50', text: 'text-blue-600' },
+                'draft': { bg: 'bg-yellow-50', text: 'text-yellow-600' },
+                'inactive': { bg: 'bg-gray-50', text: 'text-gray-600' },
+                'cancelled': { bg: 'bg-red-50', text: 'text-red-600' },
+              };
+              const color = statusColors[stat.status || 'active'];
+              const label = statusLabels[stat.status || 'active'] || stat.status;
+              return (
+                <div key={index} className={`text-center p-6 ${color.bg} rounded-xl`}>
+                  <p className="text-sm text-slate-600 mb-2 font-semibold">{label}</p>
+                  <p className={`text-4xl font-black ${color.text}`}>{stat.count}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
       </div>
-      {/* Cierre de etiquetas principales */}
-      </main>
-    </div>
+    </AdminLayout>
   );
 }

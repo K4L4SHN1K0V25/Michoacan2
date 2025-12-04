@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/components/providers/AuthProvider';
+import AdminLayout from '@/components/admin/AdminLayout';
 
 interface DashboardStats {
   users: {
@@ -44,22 +43,12 @@ interface DashboardStats {
 }
 
 export default function AdminDashboard() {
-  const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!authLoading && (!user || user.role !== 'admin')) {
-      router.push('/');
-    }
-  }, [user, authLoading, router]);
-
-  useEffect(() => {
-    if (user && user.role === 'admin') {
-      fetchStats();
-    }
-  }, [user]);
+    fetchStats();
+  }, []);
 
   async function fetchStats() {
     try {
@@ -76,44 +65,22 @@ export default function AdminDashboard() {
     }
   }
 
-  if (authLoading || loading) {
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando...</p>
+      <AdminLayout>
+        <div className="flex items-center justify-center" style={{ minHeight: 'calc(100vh - 200px)' }}>
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Cargando estadísticas...</p>
+          </div>
         </div>
-      </div>
+      </AdminLayout>
     );
   }
 
-  if (!user || user.role !== 'admin') {
-    return null;
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-black text-slate-900">
-                Panel de Administración
-              </h1>
-              <p className="text-slate-600 mt-1">Bienvenido, {user.name}</p>
-            </div>
-            <Link
-              href="/"
-              className="px-4 py-2 text-sm font-semibold text-slate-700 hover:text-slate-900 transition-colors"
-            >
-              ← Volver al inicio
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <AdminLayout>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {/* Total Users */}
@@ -182,7 +149,7 @@ export default function AdminDashboard() {
               <div>
                 <p className="text-sm font-semibold text-slate-600">Ingresos Totales</p>
                 <p className="text-3xl font-black text-slate-900 mt-2">
-                  ${(stats?.revenue.total || 0).toFixed(2)}
+                  ${Number(stats?.revenue.total || 0).toFixed(2)}
                 </p>
               </div>
               <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
@@ -289,7 +256,7 @@ export default function AdminDashboard() {
             </Link>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </AdminLayout>
   );
 }

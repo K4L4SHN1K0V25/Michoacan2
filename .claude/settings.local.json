@@ -23,7 +23,11 @@
       "Bash(timeout /t 5)",
       "Bash(npx prisma studio)",
       "Bash(del srcappadminuserspage.tsx)",
-      "Bash(ren:*)"
+      "Bash(ren:*)",
+      "Bash(dir:*)",
+      "Bash(findstr:*)",
+      "Bash(timeout /t 8)",
+      "Bash(echo:*)"
     ],
     "deny": [],
     "ask": []

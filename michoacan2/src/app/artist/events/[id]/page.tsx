@@ -30,7 +30,7 @@ export default function EventDetail({ params }: EventDetailProps) {
 
     async function fetchEvent() {
       try {
-        const response = await getEvent(parseInt(eventId));
+        const response = await getEvent(parseInt(eventId!));
         if (response.success && response.data) {
           setEvent(response.data);
         } else {

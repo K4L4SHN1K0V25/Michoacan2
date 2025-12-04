@@ -107,10 +107,16 @@ export async function DELETE(
       );
     }
 
-    // Check if there are any tickets sold
-    const ticketCount = await prisma.tickets.count({
+    // Check if there are any tickets sold through ticket_types
+    const ticketTypes = await prisma.ticket_types.findMany({
       where: { event_id: eventId },
+      select: { ticket_type_id: true }
     });
+
+    const ticketTypeIds = ticketTypes.map(tt => tt.ticket_type_id);
+    const ticketCount = ticketTypeIds.length > 0 ? await prisma.ticket.count({
+      where: { ticket_type_id: { in: ticketTypeIds } },
+    }) : 0;
 
     if (ticketCount > 0) {
       return NextResponse.json(

@@ -39,7 +39,7 @@ export async function GET(
     events.forEach(event => {
       event.ticket_types.forEach(ticketType => {
         totalCapacity += ticketType.quota || 0;
-        totalRevenue += (ticketType.quota || 0) * ticketType.price;
+        totalRevenue += (ticketType.quota || 0) * Number(ticketType.price);
       });
     });
 

@@ -1,31 +1,62 @@
 'use client';
 
-import { useState } from 'react';
-import Navbar from '@/components/layout/Navbar';
-import Sidebar from '@/components/layout/Sidebar';
-import Footer from '@/components/layout/Footer';
-import Button from '@/components/shared/Button';
+import { useState, useEffect } from 'react';
+import AdminLayout from '@/components/admin/AdminLayout';
+import { useAuth } from '@/components/providers/AuthProvider';
 
 export default function AdminProfile() {
+  const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    name: 'Admin TicketFlow',
-    email: 'admin@ticketflow.com',
-    phone: '+52 443 100 0000',
-    role: 'Administrador Principal',
+    name: '',
+    email: '',
+    phone: '',
+    role: '',
   });
 
-  const handleSave = () => {
-    setIsEditing(false);
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || 'Admin TicketFlow',
+        email: user.email || 'admin@ticketflow.com',
+        phone: user.phone || '+52 443 100 0000',
+        role: user.role === 'admin' ? 'Administrador Principal' : user.role || 'Administrador',
+      });
+    }
+  }, [user]);
+
+  const handleSave = async () => {
+    try {
+      const response = await fetch('/api/admin/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user?.id,
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        alert(error.error || 'Error al actualizar el perfil');
+        return;
+      }
+
+      alert('Perfil actualizado exitosamente');
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      alert('Error al actualizar el perfil');
+    }
   };
 
   return (
-    <>
-      <Navbar />
-      <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
-        <Sidebar role="admin" />
-
-        <main className="flex-1 p-8 md:p-12 lg:p-16 mx-auto max-w-5xl w-full">
+    <AdminLayout>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-12">
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-slate-900 mb-4">
               Mi Perfil
@@ -127,21 +158,26 @@ export default function AdminProfile() {
               <div className="flex gap-4 mt-8 justify-center">
                 {isEditing ? (
                   <>
-                    <Button onClick={handleSave} size="lg">
+                    <button
+                      onClick={handleSave}
+                      className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all"
+                    >
                       Guardar Cambios
-                    </Button>
-                    <Button
+                    </button>
+                    <button
                       onClick={() => setIsEditing(false)}
-                      variant="outline"
-                      size="lg"
+                      className="px-6 py-3 border-2 border-slate-300 text-slate-700 font-bold rounded-lg hover:bg-slate-100 transition-all"
                     >
                       Cancelar
-                    </Button>
+                    </button>
                   </>
                 ) : (
-                  <Button onClick={() => setIsEditing(true)} size="lg">
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all"
+                  >
                     Editar Perfil
-                  </Button>
+                  </button>
                 )}
               </div>
             </div>
@@ -153,17 +189,15 @@ export default function AdminProfile() {
               Seguridad
             </h3>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button variant="outline" size="lg">
+              <button className="px-6 py-3 border-2 border-slate-300 text-slate-700 font-bold rounded-lg hover:bg-slate-100 transition-all">
                 Cambiar Contraseña
-              </Button>
-              <Button variant="outline" size="lg">
+              </button>
+              <button className="px-6 py-3 border-2 border-slate-300 text-slate-700 font-bold rounded-lg hover:bg-slate-100 transition-all">
                 Configurar 2FA
-              </Button>
+              </button>
             </div>
           </div>
-        </main>
-      </div>
-      <Footer />
-    </>
+        </div>
+      </AdminLayout>
   );
 }

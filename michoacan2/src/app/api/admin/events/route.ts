@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get all events with artist info
+    // Get all events with artist and venue info
     const events = await prisma.events.findMany({
       include: {
         event_artists: {
@@ -22,6 +22,8 @@ export async function GET(request: NextRequest) {
             artists: true,
           },
         },
+        venues: true,
+        ticket_types: true,
       },
       orderBy: {
         created_at: 'desc',
@@ -29,19 +31,24 @@ export async function GET(request: NextRequest) {
     });
 
     // Format the response
-    const formattedEvents = events.map(event => ({
-      id: event.event_id,
-      name: event.event_name,
-      artistName: event.event_artists[0]?.artists?.name || 'Unknown',
-      artistId: event.event_artists[0]?.artist_id || 0,
-      date: event.event_date,
-      location: event.location,
-      venue: event.venue,
-      status: event.status,
-      totalTickets: event.total_tickets,
-      availableTickets: event.available_tickets,
-      createdAt: event.created_at,
-    }));
+    const formattedEvents = events.map(event => {
+      const totalTickets = event.ticket_types.reduce((sum, tt) => sum + tt.quota, 0);
+      const soldTickets = 0; // This would need a more complex query to calculate actual sold tickets
+
+      return {
+        id: event.event_id,
+        name: event.name,
+        artistName: event.event_artists[0]?.artists?.name || 'Sin artista',
+        artistId: event.event_artists[0]?.artist_id || 0,
+        date: event.start_dt.toISOString(),
+        location: event.venues?.city || 'Sin ubicación',
+        venue: event.venues?.name || 'Sin venue',
+        status: event.status,
+        totalTickets: totalTickets,
+        availableTickets: totalTickets - soldTickets,
+        createdAt: event.created_at?.toISOString() || new Date().toISOString(),
+      };
+    });
 
     return NextResponse.json({
       success: true,

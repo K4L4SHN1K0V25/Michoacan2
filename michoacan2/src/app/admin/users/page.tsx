@@ -1,9 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useAuth } from '@/components/providers/AuthProvider';
+import AdminLayout from '@/components/admin/AdminLayout';
 
 interface User {
   id: number;
@@ -25,8 +23,6 @@ interface FormData {
 }
 
 export default function AdminUsersPage() {
-  const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -52,16 +48,8 @@ export default function AdminUsersPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!authLoading && (!user || user.role !== 'admin')) {
-      router.push('/');
-    }
-  }, [user, authLoading, router]);
-
-  useEffect(() => {
-    if (user && user.role === 'admin') {
-      fetchUsers();
-    }
-  }, [user]);
+    fetchUsers();
+  }, []);
 
   async function fetchUsers() {
     try {
@@ -208,42 +196,9 @@ export default function AdminUsersPage() {
     return matchesSearch && matchesRole;
   });
 
-  if (authLoading || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user || user.role !== 'admin') {
-    return null;
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-black text-slate-900">Gestionar Usuarios</h1>
-              <p className="text-slate-600 mt-1">Crear, editar y eliminar usuarios</p>
-            </div>
-            <Link
-              href="/admin"
-              className="px-4 py-2 text-sm font-semibold text-slate-700 hover:text-slate-900 transition-colors"
-            >
-              ← Volver al panel
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <AdminLayout>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Success/Error Messages */}
         {success && (
           <div className="mb-6 bg-green-50 border-2 border-green-200 text-green-700 px-4 py-3 rounded-lg">
@@ -382,7 +337,6 @@ export default function AdminUsersPage() {
             </tbody>
           </table>
         </div>
-      </main>
 
       {/* Add User Modal */}
       {showAddModal && (
@@ -613,6 +567,7 @@ export default function AdminUsersPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </AdminLayout>
   );
 }

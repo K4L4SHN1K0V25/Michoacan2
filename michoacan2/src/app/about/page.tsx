@@ -1,6 +1,6 @@
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
-import Button from '@/components/shared/Button';
+import Link from 'next/link';
 
 export default function About() {
   return (
@@ -181,12 +181,18 @@ export default function About() {
                 Descubre eventos increíbles o empieza a vender tus propios boletos hoy mismo.
               </p>
               <div className="flex gap-4 justify-center flex-wrap">
-                <Button href="/register" size="lg">
+                <Link
+                  href="/register"
+                  className="px-8 py-4 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors text-lg"
+                >
                   Crear Cuenta
-                </Button>
-                <Button href="/contact" variant="outline" size="lg">
+                </Link>
+                <Link
+                  href="/contact"
+                  className="px-8 py-4 border-2 border-blue-600 text-blue-600 font-bold rounded-xl hover:bg-blue-50 transition-colors text-lg"
+                >
                   Contáctanos
-                </Button>
+                </Link>
               </div>
             </div>
           </div>
