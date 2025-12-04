@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
-    const { userId, name, email, phone } = body;
+    const { userId, name, email } = body;
 
     if (!userId) {
       return NextResponse.json(
